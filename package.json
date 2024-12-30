@@ -59,6 +59,7 @@
     "n8n-workflow": "*"
   },
   "dependencies": {
-    "moment-timezone": "^0.5.46"
+    "moment-timezone": "^0.5.46",
+    "n8n-efecte": "link:/Users/maholick/Downloads/n8n-efecte"
   }
 }
