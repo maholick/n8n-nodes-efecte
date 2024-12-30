@@ -1,19 +1,19 @@
 {
-  "name": "n8n-nodes-<...>",
+  "name": "n8n-efecte",
   "version": "0.1.0",
-  "description": "",
+  "description": "Efecte nodes for n8n",
   "keywords": [
     "n8n-community-node-package"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://maholick.com",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "Shawn Maholick",
+    "email": "shawn@maholick.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/<...>/n8n-nodes-<...>.git"
+    "url": "https://github.com/maholick/n8n-efecte"
   },
   "engines": {
     "node": ">=18.10",
@@ -37,11 +37,13 @@
     "n8nNodesApiVersion": 1,
     "credentials": [
       "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
+      "dist/credentials/HttpBinApi.credentials.js",
+      "dist/credentials/EfecteEsmApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/HttpBin/HttpBin.node.js",
+      "dist/nodes/EfecteEsm/EfecteEsm.node.js"
     ]
   },
   "devDependencies": {
@@ -55,5 +57,9 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "moment-timezone": "^0.5.46",
+    "n8n-efecte": "link:/Users/maholick/Downloads/n8n-efecte"
   }
 }

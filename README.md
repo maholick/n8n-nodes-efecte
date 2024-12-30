@@ -1,46 +1,111 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+# n8n-nodes-efecte
 
-# n8n-nodes-starter
+This is an n8n community node for integrating with Efecte (Matrix42 Core/Pro) Service Management Tool. It provides nodes to interact with the Efecte REST API v1.
 
-This repo contains example nodes to help you get started building your own custom integrations for [n8n](n8n.io). It includes the node linter and other dependencies.
+[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-To make your custom node available to the community, you must create it as an npm package, and [submit it to the npm registry](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
+[Installation](#installation)  
+[Operations](#operations)  
+[Credentials](#credentials)  
+[Compatibility](#compatibility)  
+[Usage](#usage)  
+[Resources](#resources)  
 
-## Prerequisites
+## Installation
 
-You need the following installed on your development machine:
+### Locally
 
-* [git](https://git-scm.com/downloads)
-* Node.js and pnpm. Minimum version Node 18. You can find instructions on how to install both using nvm (Node Version Manager) for Linux, Mac, and WSL [here](https://github.com/nvm-sh/nvm). For Windows users, refer to Microsoft's guide to [Install NodeJS on Windows](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows).
-* Install n8n with:
-  ```
-  pnpm install n8n -g
-  ```
-* Recommended: follow n8n's guide to [set up your development environment](https://docs.n8n.io/integrations/creating-nodes/build/node-development-environment/).
+Follow these steps to install the node package in your local n8n instance:
 
-## Using this starter
+```bash
+# Install n8n (if not already installed)
+npm install n8n -g
 
-These are the basic steps for working with the starter. For detailed guidance on creating and publishing nodes, refer to the [documentation](https://docs.n8n.io/integrations/creating-nodes/).
+# Install the Efecte node package
+npm install n8n-nodes-efecte
 
-1. [Generate a new repository](https://github.com/n8n-io/n8n-nodes-starter/generate) from this template repository.
-2. Clone your new repo:
+# Start n8n
+n8n start
+```
+
+### Using Docker
+
+To use this node with n8n in Docker, you can use the following docker-compose configuration:
+
+```yaml
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_CUSTOM_EXTENSIONS=n8n-nodes-efecte
+    volumes:
+      - ~/.n8n:/home/node/.n8n
+    command: n8n start
+```
+
+## Operations
+
+This node implements the following operations for interacting with Efecte:
+
+### Trigger Node
+- Watch for new/updated data cards
+
+### Regular Node
+- Create data card
+- Update data card
+- Get data cards (list/search)
+
+## Credentials
+
+To use the Efecte nodes, you need to configure authentication credentials:
+
+1. Open your n8n instance
+2. Go to **Settings** > **Credentials**
+3. Click on **Add Credential**
+4. Search for "Efecte ESM API"
+5. Configure the following fields:
+   - **Host**: Your Efecte instance URL (e.g., https://your-instance.efectecloud.com)
+   - **Username**: Your Efecte username
+   - **Password**: Your Efecte password
+
+The node uses JWT authentication internally to communicate with the Efecte API.
+
+## Compatibility
+
+- Efecte Service Management Tool REST API v1
+- n8n version >= 1.70.0 (tested up to 1.72.1)
+
+## Usage
+
+1. **Authentication Setup**
+   - Configure credentials as described above
+   - The node will automatically handle JWT token management
+
+2. **Basic Workflow Example**
    ```
-   git clone https://github.com/<your organization>/<your-repo-name>.git
+   Trigger (Efecte ESM) -> Process Data -> Action (Efecte ESM)
    ```
-3. Run `pnpm i` to install dependencies.
-4. Open the project in your editor.
-5. Browse the examples in `/nodes` and `/credentials`. Modify the examples, or replace them with your own nodes.
-6. Update the `package.json` to match your details.
-7. Run `pnpm lint` to check for errors or `pnpm lintfix` to automatically fix errors when possible.
-8. Test your node locally. Refer to [Run your node locally](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/) for guidance.
-9. Replace this README with documentation for your node. Use the [README_TEMPLATE](README_TEMPLATE.md) to get started.
-10. Update the LICENSE file to use your details.
-11. [Publish](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry) your package to npm.
 
-## More information
+3. **Data Card Operations**
+   - Use template codes to specify which type of data card to work with
+   - Available templates can be retrieved from the API
+   - Follow Efecte's data model for creating/updating cards
 
-Refer to our [documentation on creating nodes](https://docs.n8n.io/integrations/creating-nodes/) for detailed information on building your own nodes.
+4. **Error Handling**
+   - The node implements proper error handling for API responses
+   - Check workflow execution logs for detailed error messages
+
+## Resources
+
+* [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
+* [Efecte API Documentation](https://docs.efecte.com/other-technical-esm-documentation/esm-rest-api-overview)
 
 ## License
 
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+[MIT](LICENSE.md)
+
+
