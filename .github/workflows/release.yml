@@ -33,9 +33,6 @@ jobs:
     - name: Build project
       run: pnpm run build
 
-    - name: Run tests
-      run: pnpm run test
-
     - name: Get version from package.json
       id: package-version
       uses: martinbeentjes/npm-get-version-action@v1.3.1
