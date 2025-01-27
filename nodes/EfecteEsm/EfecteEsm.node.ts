@@ -1,3 +1,4 @@
+/* eslint-disable n8n-nodes-base/node-param-operation-option-action-miscased */
 import type {
 	IExecuteFunctions,
 	INodeExecutionData,
@@ -11,7 +12,7 @@ export class EfecteEsm implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Efecte ESM',
 		name: 'efecteEsm',
-		icon: 'file:efecte.svg',
+		icon: 'file:favicon_matrix42.png',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
@@ -42,28 +43,34 @@ export class EfecteEsm implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
+						name: 'Create DataCard',
+						value: 'createDataCard',
+						description: 'Create a new data card',
+						action: 'Create a DataCard',
+					},
+					{
+						name: 'Delete DataCard',
+						value: 'deleteDataCard',
+						description: 'Delete a DataCard',
+						action: 'Delete DataCard',
+					},
+					{
 						name: 'List Data Cards',
 						value: 'listDataCards',
 						description: 'Get all data cards by template code',
-						action: 'List all data cards',
+						action: 'List all DataCards',
 					},
 					{
 						name: 'Search Data Cards',
 						value: 'searchDataCards',
 						description: 'Search for data cards using EQL',
-						action: 'Search data cards',
-					},
-					{
-						name: 'Create DataCard',
-						value: 'createDataCard',
-						description: 'Create a new data card',
-						action: 'Create a data card',
+						action: 'Search DataCards',
 					},
 					{
 						name: 'Update DataCard',
 						value: 'updateDataCard',
 						description: 'Update an existing data card',
-						action: 'Update a data card',
+						action: 'Update DataCard',
 					},
 				],
 				default: 'listDataCards',
@@ -73,9 +80,9 @@ export class EfecteEsm implements INodeType {
 				name: 'templateCode',
 				type: 'string',
 				default: '',
-				required: true,
-				description: 'The template code for tickets (e.g. "Incidents", "ServiceRequests", etc.)',
-				placeholder: 'e.g. Incidents',
+						required: true,
+						description: 'The template code for tickets (e.g. "Incidents", "ServiceRequests", etc.)',
+						placeholder: 'e.g. Incidents',
 			},
 			{
 				displayName: 'Folder Code',
@@ -93,10 +100,10 @@ export class EfecteEsm implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						operation: ['updateDataCard'],
+						operation: ['updateDataCard', 'deleteDataCard'],
 					},
 				},
-				description: 'The ID of the DataCard to update',
+				description: 'The ID of the DataCard',
 			},
 			{
 				displayName: 'Fields',
@@ -378,6 +385,66 @@ export class EfecteEsm implements INodeType {
 						],
 						default: 'visible',
 						description: 'Filter data cards by their visibility status',
+					},
+				],
+			},
+			{
+				displayName: 'DataCard IDs',
+				name: 'dataCardIds',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						operation: ['deleteDataCards'],
+					},
+				},
+				description: 'ID or comma-separated list of IDs of the DataCards to delete',
+				placeholder: 'e.g. 12345 or 12345,67890',
+			},
+			{
+				displayName: 'Additional Fields',
+				name: 'additionalFields',
+				type: 'collection',
+				placeholder: 'Add Field',
+				default: {},
+				displayOptions: {
+					show: {
+						operation: ['deleteDataCard'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Folder Code',
+						name: 'folderCode',
+						type: 'string',
+						default: '',
+						description: 'The folder code to filter data cards (e.g. "incident_management")',
+						placeholder: 'e.g. incident_management',
+					},
+					{
+						displayName: 'Visibility',
+						name: 'visibility',
+						type: 'options',
+						options: [
+							{
+								name: 'All',
+								value: 'all',
+								description: 'Delete data card regardless of visibility',
+							},
+							{
+								name: 'Visible Only',
+								value: 'visible',
+								description: 'Delete only if data card is visible',
+							},
+							{
+								name: 'Hidden Only',
+								value: 'hidden',
+								description: 'Delete only if data card is hidden',
+							},
+						],
+						default: 'visible',
+						description: 'Check data card visibility before deletion',
 					},
 				],
 			},
@@ -698,6 +765,120 @@ export class EfecteEsm implements INodeType {
 								'Resource is locked',
 								{
 									description: 'The DataCard is currently locked by another process.',
+									itemIndex: i,
+								},
+							);
+						}
+						throw error;
+					}
+				} else if (operation === 'deleteDataCard') {
+					const templateCode = this.getNodeParameter('templateCode', i) as string;
+					const dataCardId = this.getNodeParameter('dataCardId', i) as string;
+					const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+
+					// Setze Visibility Filter
+					const visibility = (additionalFields.visibility as string) || 'visible';
+					let hiddenFilter = '';
+					switch (visibility) {
+						case 'all':
+							// Keine zusätzlichen Parameter für 'all'
+							break;
+						case 'hidden':
+							hiddenFilter = 'hidden = 1';
+							break;
+						case 'visible':
+						default:
+							hiddenFilter = 'hidden = 0';
+							break;
+					}
+
+					try {
+						// Optional: Prüfe Visibility und Folder Code vor dem Löschen
+						if (hiddenFilter || additionalFields.folderCode) {
+							const cardInfo = await this.helpers.request({
+								method: 'GET',
+								url: `${baseUrl}/rest-api/itsm/v1/dc/${templateCode}/data/${dataCardId}`,
+								headers: {
+									'Authorization': `Bearer ${token}`,
+									'Accept': 'application/json',
+								},
+							});
+
+							const parsedCardInfo = typeof cardInfo === 'string' ? JSON.parse(cardInfo) : cardInfo;
+
+							// Prüfe Visibility
+							if (hiddenFilter) {
+								const isHidden = parsedCardInfo.hidden === true;
+								if ((visibility === 'visible' && isHidden) ||
+									(visibility === 'hidden' && !isHidden)) {
+									throw new NodeOperationError(
+										this.getNode(),
+										`DataCard visibility (${isHidden ? 'hidden' : 'visible'}) does not match filter (${visibility})`,
+										{
+											description: 'The DataCard cannot be deleted due to visibility mismatch',
+											itemIndex: i,
+										},
+									);
+								}
+							}
+
+							// Prüfe Folder Code
+							if (additionalFields.folderCode &&
+								parsedCardInfo.folderCode !== additionalFields.folderCode) {
+								throw new NodeOperationError(
+									this.getNode(),
+									`DataCard folder code (${parsedCardInfo.folderCode}) does not match filter (${additionalFields.folderCode})`,
+									{
+										description: 'The DataCard cannot be deleted due to folder code mismatch',
+										itemIndex: i,
+									},
+								);
+							}
+						}
+
+						// Führe die Löschung durch
+						await this.helpers.request({
+							method: 'DELETE',
+							url: `${baseUrl}/rest-api/itsm/v1/dc/${templateCode}/data/${dataCardId}`,
+							headers: {
+								'Authorization': `Bearer ${token}`,
+								'Accept': 'application/json',
+							},
+						});
+
+						returnData.push({
+							success: true,
+							dataCardId,
+						});
+
+					} catch (error) {
+						if (error instanceof NodeOperationError) {
+							throw error;
+						}
+						if (error.response?.status === 404) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'DataCard not found',
+								{
+									description: 'Please check if the DataCard ID exists.',
+									itemIndex: i,
+								},
+							);
+						} else if (error.response?.status === 403) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'Forbidden - No permission to delete DataCard',
+								{
+									description: 'You do not have the required permissions to delete this DataCard.',
+									itemIndex: i,
+								},
+							);
+						} else if (error.response?.status === 409) {
+							throw new NodeOperationError(
+								this.getNode(),
+								'DataCard is already in the trashcan',
+								{
+									description: 'The DataCard has already been deleted.',
 									itemIndex: i,
 								},
 							);
