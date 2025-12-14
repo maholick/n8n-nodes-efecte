@@ -12,7 +12,7 @@ export class EfecteEsm implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Efecte ESM',
 		name: 'efecteEsm',
-		icon: 'file:favicon_matrix42.png',
+		icon: 'file:icon.png',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',

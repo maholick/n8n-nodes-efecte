@@ -11,7 +11,7 @@ export class EfecteEsmTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Efecte ESM Trigger',
 		name: 'efecteEsmTrigger',
-		icon: 'file:favicon_matrix42.png',
+		icon: 'file:icon.png',
 		group: ['trigger'],
 		version: 1,
 		description: 'Starts the workflow when Efecte DataCards change',

@@ -354,8 +354,7 @@ n8n-nodes-efecte/
 │   └── EfecteEsm/
 │       ├── EfecteEsm.node.ts        # Main node implementation
 │       ├── EfecteEsmTrigger.node.ts # Trigger node implementation
-│       ├── efecte.svg                # Node icon
-│       └── favicon_matrix42.png     # Additional icon
+│       └── icon.png                 # Node icon
 ├── dist/                             # Compiled output
 ├── package.json
 ├── tsconfig.json
