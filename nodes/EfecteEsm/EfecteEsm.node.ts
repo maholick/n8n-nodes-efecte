@@ -160,26 +160,12 @@ export class EfecteEsm implements INodeType {
 				name: 'folderCode',
 				type: 'string',
 				default: '',
-				required: true,
 				displayOptions: {
 					show: {
-						operation: ['createDataCard'],
+						operation: ['createDataCard', 'listDataCards', 'searchDataCards', 'updateDataCard'],
 					},
 				},
-				description: 'The folder code for the data card (required for create operations)',
-				placeholder: 'e.g. incident_management',
-			},
-			{
-				displayName: 'Folder Code',
-				name: 'folderCode',
-				type: 'string',
-				default: '',
-				displayOptions: {
-					show: {
-						operation: ['listDataCards', 'searchDataCards', 'updateDataCard'],
-					},
-				},
-				description: 'The folder code to filter data cards or move data card to (e.g. "incident_management")',
+				description: 'The folder code for the data card (required for create operations, optional for others)',
 				placeholder: 'e.g. incident_management',
 			},
 			{
@@ -1159,7 +1145,7 @@ export class EfecteEsm implements INodeType {
 					try {
 						let response;
 						if (operation === 'createDataCard') {
-							// folderCode is required for create operations
+							// folderCode is required for create operations (enforced by parameter definition)
 							if (!folderCode) {
 								throw new NodeOperationError(
 									this.getNode(),
@@ -1605,8 +1591,8 @@ export class EfecteEsm implements INodeType {
 						const binaryPropertyName = 'data';
 						const binaryDataObj = await this.helpers.prepareBinaryData(binaryData, fileLocation);
 						
-						// Return data with binary property
-						const item: IDataObject = {
+						// Return data with binary property - use type assertion to allow binary property
+						const item = {
 							json: {
 								fileName: fileLocation,
 								mimeType: response.headers['content-type'] || 'application/octet-stream',
@@ -1614,7 +1600,7 @@ export class EfecteEsm implements INodeType {
 							binary: {
 								[binaryPropertyName]: binaryDataObj,
 							},
-						};
+						} as IDataObject & { binary?: { [key: string]: IDataObject } };
 
 						returnData.push(item);
 					} catch (error) {
@@ -1808,15 +1794,20 @@ export class EfecteEsm implements INodeType {
 		}
 
 		// Check if we have binary data (from downloadFile operation)
-		const hasBinaryData = returnData.some((item: IDataObject) => item.binary);
+		// Use type assertion to check for binary property safely
+		const hasBinaryData = returnData.some((item) => {
+			const itemWithBinary = item as IDataObject & { binary?: { [key: string]: IDataObject } };
+			return itemWithBinary.binary !== undefined;
+		});
 		
 		if (hasBinaryData) {
 			// Return items with binary data
-			const result: INodeExecutionData[] = returnData.map((item: IDataObject) => {
-				if (item.binary) {
+			const result: INodeExecutionData[] = returnData.map((item) => {
+				const itemWithBinary = item as IDataObject & { binary?: { [key: string]: IDataObject } };
+				if (itemWithBinary.binary) {
 					return {
-						json: item.json || {},
-						binary: item.binary as { [key: string]: IDataObject },
+						json: (itemWithBinary.json as IDataObject) || {},
+						binary: itemWithBinary.binary,
 					};
 				}
 				return { json: item };
