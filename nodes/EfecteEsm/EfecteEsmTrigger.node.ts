@@ -159,11 +159,11 @@ export class EfecteEsmTrigger implements INodeType {
 				if (invalidAttributes.length > 0) {
 					throw new NodeOperationError(
 						this.getNode(),
-						'Ungültige Attribute ausgewählt',
+						'Invalid attributes selected',
 						{
-							description: `Folgende Attribute existieren nicht im Template "${templateCode}":\n` +
+							description: `The following attributes do not exist in template "${templateCode}":\n` +
 								`${invalidAttributes.join(', ')}\n\n` +
-								`Verfügbare Attribute sind:\n${availableAttributes.join(', ')}`,
+								`Available attributes are:\n${availableAttributes.join(', ')}`,
 						},
 					);
 				}
@@ -177,9 +177,9 @@ export class EfecteEsmTrigger implements INodeType {
 				}
 				throw new NodeOperationError(
 					this.getNode(),
-					'Fehler beim Validieren der Attribute',
+					'Error validating attributes',
 					{
-						description: 'Die Template-Informationen konnten nicht abgerufen werden.',
+						description: 'Template information could not be retrieved.',
 					},
 				);
 			}
@@ -339,9 +339,9 @@ export class EfecteEsmTrigger implements INodeType {
 
 				throw new NodeOperationError(
 					this.getNode(),
-					'API-Ratenlimit überschritten',
+					'API rate limit exceeded',
 					{
-						description: `Das API-Ratenlimit wurde überschritten.\nBitte warten Sie ${responseData.message.match(/\d+/)?.[0] || 'einige'} Sekunden, bevor Sie es erneut versuchen.\n\nURL: ${responseData.url}\nZeitstempel: ${responseData.timestamp}`,
+						description: `The API rate limit has been exceeded.\nPlease wait ${responseData.message.match(/\d+/)?.[0] || 'a few'} seconds before trying again.\n\nURL: ${responseData.url}\nTimestamp: ${responseData.timestamp}`,
 					},
 				);
 			}

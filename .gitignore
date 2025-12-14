@@ -1,12 +1,5 @@
 # Dependencies
 node_modules
-.DS_Store
-.tmp
-tmp
-dist
-npm-debug.log*
-yarn.lock
-.vscode/launch.json
 
 # Logs
 logs
@@ -44,7 +37,10 @@ coverage
 # Build
 build/
 dist/
+dist_old/
 out/
+.tmp
+tmp
 
 # n8n specific
 .n8n/
@@ -52,7 +48,9 @@ credentials.json
 workflow.json
 
 # Package manager locks
-pnpm-lock.yaml
+# Note: pnpm-lock.yaml is typically committed for reproducibility
+# Uncomment the line below if you want to ignore it
+# pnpm-lock.yaml
 
 # macOS specific
 .DS_Store
@@ -70,11 +68,9 @@ Icon
 # Optional npm cache directory
 .npm
 
-# Optional eslint cache
-.eslintcache
-
 # Optional REPL history
 .node_repl_history
 
 # Additional documentation
 .additional_docs/
+.vscode/
