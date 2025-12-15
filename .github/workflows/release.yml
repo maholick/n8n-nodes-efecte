@@ -3,7 +3,20 @@ name: Release
 on:
   push:
     branches:
-      - master
+      - main
+    paths-ignore:
+      - '.github/workflows/**'
+      - '.editorconfig'
+      - '.eslintrc*'
+      - '.gitignore'
+      - '.npmignore'
+      - '.prettierrc*'
+      - 'tslint.json'
+      - 'tsconfig.json'
+      - 'README.md'
+      - 'LICENSE.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'CHANGELOG.md'
   workflow_dispatch:
 
 jobs:
@@ -19,30 +32,63 @@ jobs:
         fetch-tags: true
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Check if package.json changed
+      id: check_package_json
+      if: github.event_name != 'workflow_dispatch'
+      run: |
+        if git diff --name-only HEAD~1 HEAD | grep -q "^package.json$"; then
+          echo "package_json_changed=true" >> $GITHUB_OUTPUT
+          echo "package.json was modified"
+        else
+          echo "package_json_changed=false" >> $GITHUB_OUTPUT
+          echo "package.json was not modified - skipping release"
+        fi
+
     - name: Setup Node.js
+      if: |
+        github.event_name == 'workflow_dispatch' ||
+        steps.check_package_json.outputs.package_json_changed == 'true'
       uses: actions/setup-node@v4
       with:
         node-version: '22.12.0'
 
     - name: Install pnpm
+      if: |
+        github.event_name == 'workflow_dispatch' ||
+        steps.check_package_json.outputs.package_json_changed == 'true'
       uses: pnpm/action-setup@v2
       with:
         version: 9.1.4
 
     - name: Install dependencies
+      if: |
+        github.event_name == 'workflow_dispatch' ||
+        steps.check_package_json.outputs.package_json_changed == 'true'
       run: pnpm install --no-frozen-lockfile
 
     - name: Run linter
+      if: |
+        github.event_name == 'workflow_dispatch' ||
+        steps.check_package_json.outputs.package_json_changed == 'true'
       run: pnpm run lint
 
     - name: Build project
+      if: |
+        github.event_name == 'workflow_dispatch' ||
+        steps.check_package_json.outputs.package_json_changed == 'true'
       run: pnpm run build
 
     - name: Get version from package.json
+      if: |
+        github.event_name == 'workflow_dispatch' ||
+        steps.check_package_json.outputs.package_json_changed == 'true'
       id: package-version
       uses: martinbeentjes/npm-get-version-action@v1.3.1
 
     - name: Check if version has changed
+      if: |
+        github.event_name == 'workflow_dispatch' ||
+        steps.check_package_json.outputs.package_json_changed == 'true'
       id: check_version
       run: |
         LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
@@ -85,7 +131,7 @@ jobs:
           echo ""
           echo "---"
           echo ""
-          echo "See [CHANGELOG](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md) for details."
+          echo "See [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details."
           echo "EOF"
         } >> $GITHUB_OUTPUT
 
