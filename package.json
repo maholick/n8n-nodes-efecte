@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@n8n/node-cli": "^0.17.0",
+    "@types/node": "^20.19.27",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^8.57.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.1",

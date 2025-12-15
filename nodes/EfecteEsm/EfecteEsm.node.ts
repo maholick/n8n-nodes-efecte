@@ -43,22 +43,16 @@ export class EfecteEsm implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'Get All Templates',
-						value: 'getAllTemplates',
-						description: 'Get list of all available templates',
-						action: 'Get all Templates',
+						name: 'Add Attribute Value',
+						value: 'addAttributeValue',
+						description: 'Add value to multi-value or empty attribute',
+						action: 'Add Value to Attribute',
 					},
 					{
-						name: 'Get Template',
-						value: 'getTemplate',
-						description: 'Get detailed template information including attributes',
-						action: 'Get Template',
-					},
-					{
-						name: 'Get DataCard',
-						value: 'getDataCard',
-						description: 'Get full details of a single data card by ID',
-						action: 'Get a DataCard',
+						name: 'Bulk Import DataCards',
+						value: 'bulkImportDataCards',
+						description: 'Import multiple data cards synchronously',
+						action: 'Bulk Import DataCards',
 					},
 					{
 						name: 'Create DataCard',
@@ -67,16 +61,46 @@ export class EfecteEsm implements INodeType {
 						action: 'Create a DataCard',
 					},
 					{
-						name: 'Update DataCard',
-						value: 'updateDataCard',
-						description: 'Update an existing data card',
-						action: 'Update DataCard',
+						name: 'Delete Attribute',
+						value: 'deleteAttribute',
+						description: 'Clear attribute value(s)',
+						action: 'Delete an Attribute',
 					},
 					{
 						name: 'Delete DataCard',
 						value: 'deleteDataCard',
 						description: 'Delete a DataCard',
 						action: 'Delete DataCard',
+					},
+					{
+						name: 'Download File',
+						value: 'downloadFile',
+						description: 'Download file attachment from data card',
+						action: 'Download a File',
+					},
+					{
+						name: 'Get All Templates',
+						value: 'getAllTemplates',
+						description: 'Get list of all available templates',
+						action: 'Get all Templates',
+					},
+					{
+						name: 'Get Attribute',
+						value: 'getAttribute',
+						description: 'Get value of a specific attribute from a data card',
+						action: 'Get an Attribute',
+					},
+					{
+						name: 'Get DataCard',
+						value: 'getDataCard',
+						description: 'Get full details of a single data card by ID',
+						action: 'Get a DataCard',
+					},
+					{
+						name: 'Get Template',
+						value: 'getTemplate',
+						description: 'Get detailed template information including attributes',
+						action: 'Get Template',
 					},
 					{
 						name: 'List Data Cards',
@@ -91,10 +115,10 @@ export class EfecteEsm implements INodeType {
 						action: 'Search DataCards',
 					},
 					{
-						name: 'Get Attribute',
-						value: 'getAttribute',
-						description: 'Get value of a specific attribute from a data card',
-						action: 'Get an Attribute',
+						name: 'Stream Data Cards',
+						value: 'streamDataCards',
+						description: 'Stream all data cards (for large datasets)',
+						action: 'Stream DataCards',
 					},
 					{
 						name: 'Update Attribute',
@@ -103,40 +127,16 @@ export class EfecteEsm implements INodeType {
 						action: 'Update an Attribute',
 					},
 					{
-						name: 'Add Attribute Value',
-						value: 'addAttributeValue',
-						description: 'Add value to multi-value or empty attribute',
-						action: 'Add Value to Attribute',
-					},
-					{
-						name: 'Delete Attribute',
-						value: 'deleteAttribute',
-						description: 'Clear attribute value(s)',
-						action: 'Delete an Attribute',
+						name: 'Update DataCard',
+						value: 'updateDataCard',
+						description: 'Update an existing data card',
+						action: 'Update DataCard',
 					},
 					{
 						name: 'Upload File',
 						value: 'uploadFile',
 						description: 'Upload file attachment to data card',
 						action: 'Upload a File',
-					},
-					{
-						name: 'Download File',
-						value: 'downloadFile',
-						description: 'Download file attachment from data card',
-						action: 'Download a File',
-					},
-					{
-						name: 'Bulk Import DataCards',
-						value: 'bulkImportDataCards',
-						description: 'Import multiple data cards synchronously',
-						action: 'Bulk Import DataCards',
-					},
-					{
-						name: 'Stream Data Cards',
-						value: 'streamDataCards',
-						description: 'Stream all data cards (for large datasets)',
-						action: 'Stream DataCards',
 					},
 				],
 				default: 'listDataCards',
@@ -778,6 +778,7 @@ export class EfecteEsm implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: IDataObject[] = [];
+		const binaryItems: INodeExecutionData[] = [];
 		const operation = this.getNodeParameter('operation', 0) as string;
 		const credentials = await this.getCredentials('efecteEsmApi');
 
@@ -1572,37 +1573,35 @@ export class EfecteEsm implements INodeType {
 					const fileLocation = this.getNodeParameter('fileLocation', i) as string;
 
 					try {
-						const response = await this.helpers.request({
+						// Use httpRequest for binary downloads
+						const response = await this.helpers.httpRequest({
 							method: 'GET',
 							url: `${baseUrl}/rest-api/itsm/v1/dc/${templateCode}/data/${dataCardId}/${attributeCode}/file/${fileLocation}`,
 							headers: {
 								'Authorization': `Bearer ${token}`,
 							},
-							returnFullResponse: true,
-							encoding: null,
+							encoding: null as any,
 						});
 
-						// Store binary data
-						const binaryData = Buffer.isBuffer(response.body) 
-							? response.body 
-							: Buffer.from(response.body as string);
+						// Store binary data - httpRequest with encoding: null returns Buffer
+						const binaryData = Buffer.isBuffer(response) 
+							? response 
+							: Buffer.from(response as string);
 						
 						// Prepare binary data for n8n
 						const binaryPropertyName = 'data';
 						const binaryDataObj = await this.helpers.prepareBinaryData(binaryData, fileLocation);
 						
-						// Return data with binary property - use type assertion to allow binary property
-						const item = {
+						// Store binary item separately
+						binaryItems.push({
 							json: {
 								fileName: fileLocation,
-								mimeType: response.headers['content-type'] || 'application/octet-stream',
+								mimeType: 'application/octet-stream',
 							},
 							binary: {
 								[binaryPropertyName]: binaryDataObj,
 							},
-						} as IDataObject & { binary?: { [key: string]: IDataObject } };
-
-						returnData.push(item);
+						});
 					} catch (error) {
 						if (error.response?.status === 404) {
 							throw new NodeOperationError(
@@ -1638,8 +1637,9 @@ export class EfecteEsm implements INodeType {
 								data: {},
 							};
 
-							if (dataCard.fields?.field) {
-								for (const field of dataCard.fields.field as IDataObject[]) {
+							const fields = dataCard.fields as IDataObject;
+							if (fields && fields.field) {
+								for (const field of fields.field as IDataObject[]) {
 									const fieldName = field.fieldName as string;
 									const fieldType = field.fieldType as string;
 									const fieldValue = field.fieldValue;
@@ -1664,7 +1664,7 @@ export class EfecteEsm implements INodeType {
 											break;
 									}
 
-									cardData.data[fieldName] = {
+									(cardData.data as IDataObject)[fieldName] = {
 										values: [valueObj],
 									};
 								}
@@ -1793,26 +1793,9 @@ export class EfecteEsm implements INodeType {
 			}
 		}
 
-		// Check if we have binary data (from downloadFile operation)
-		// Use type assertion to check for binary property safely
-		const hasBinaryData = returnData.some((item) => {
-			const itemWithBinary = item as IDataObject & { binary?: { [key: string]: IDataObject } };
-			return itemWithBinary.binary !== undefined;
-		});
-		
-		if (hasBinaryData) {
-			// Return items with binary data
-			const result: INodeExecutionData[] = returnData.map((item) => {
-				const itemWithBinary = item as IDataObject & { binary?: { [key: string]: IDataObject } };
-				if (itemWithBinary.binary) {
-					return {
-						json: (itemWithBinary.json as IDataObject) || {},
-						binary: itemWithBinary.binary,
-					};
-				}
-				return { json: item };
-			});
-			return [result];
+		// If we have binary items, return them; otherwise return regular data
+		if (binaryItems.length > 0) {
+			return [binaryItems];
 		}
 		
 		return [this.helpers.returnJsonArray(returnData)];
