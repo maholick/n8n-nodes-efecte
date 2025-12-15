@@ -1,2 +1,48 @@
-.DS_Store
+# Source files (only dist should be published)
+nodes/
+credentials/
+*.ts
+!*.d.ts
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+*.code-workspace
+
+# Build and cache
 *.tsbuildinfo
+.eslintcache
+.eslintrc*
+.prettierrc*
+tsconfig.json
+tslint.json
+
+# Documentation (keep README and LICENSE)
+CODE_OF_CONDUCT.md
+
+# Package manager
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.*
+
+# IDE
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Test files
+test/
+tests/
+__tests__/
+*.test.ts
+*.spec.ts
+
+# Development scripts
+index.js

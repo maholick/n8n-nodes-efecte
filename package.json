@@ -1,5 +1,5 @@
 {
-  "name": "n8n-efecte",
+  "name": "n8n-nodes-efecte",
   "version": "0.1.0",
   "description": "Efecte nodes for n8n",
   "keywords": [
@@ -54,8 +54,5 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
-  },
-  "dependencies": {
-    "moment-timezone": "^0.5.46"
   }
 }
