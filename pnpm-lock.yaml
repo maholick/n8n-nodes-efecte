@@ -5,8 +5,8 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  axios: ^1.12.0
-  form-data: ^4.0.4
+  axios: 1.13.2
+  form-data: 4.0.5
 
 importers:
 
